@@ -8,10 +8,12 @@ aliases to the same module objects; keep them so existing imports, dependency
 overrides, error identities, and controlled patches still work. Do not duplicate
 provider behavior in the aliases. `get_calendar_service` remains the internal
 FastAPI dependency; consumers use `team5_calendar.create_calendar_service` with
-an explicit external token path. Public factory authorization is isolated per
-service/call and refreshed in memory. The legacy API retains its existing local
-and hosted token handling. Optional provider tracing calls back into app-owned
-tracing without a framework/SDK dependency in the package.
+an explicit external token path or in-memory `Credentials`. Its `list_upcoming`
+read is a package extension outside the shared contract. Public factory
+authorization is isolated per service/call and refreshed in memory. The legacy
+API retains its existing local and hosted token handling. Optional provider
+tracing calls back into app-owned tracing without a framework/SDK dependency in
+the package.
 
 The active HW3 package uses `calendar-contract` tag `v0.1.0`, commit
 `db73e6261a93b0c3cc6aa0a48c4687f742aacc9b`. The HW2 `rc.1` references below

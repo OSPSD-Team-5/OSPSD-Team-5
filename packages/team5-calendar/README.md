@@ -8,7 +8,8 @@ The four shared methods, models, and errors remain defined by
 [`calendar-contract` v0.1.0](https://github.com/Airbus-A330/OSPSD-Calendar/tree/v0.1.0).
 This package supplies the Google behavior; installing only the contract does
 not install the implementation. The implementation runs with your own Google
-test account and externally supplied OAuth token file.
+test account and externally supplied OAuth token file, or with each user's
+OAuth credentials held in memory by your service.
 
 ## Install and configure
 
@@ -98,6 +99,57 @@ token or separately running Team 5 server is required. Creation is not
 idempotent: never automatically repeat an uncertain create or replacement.
 If creation fails before returning an ID, inspect Google for the uniquely named
 test event before trying again.
+
+## Per-user credentials
+
+A service that acts for several signed-in users can pass each user's grant
+instead of a token file. Build one service per user from the values you stored
+when that user connected:
+
+```python
+from google.oauth2.credentials import Credentials
+from team5_calendar import create_calendar_service
+
+grant = Credentials(
+    token=stored_access_token,  # may be None; the first call refreshes it
+    refresh_token=stored_refresh_token,
+    client_id=oauth_client_id,
+    client_secret=oauth_client_secret,
+    token_uri="https://oauth2.googleapis.com/token",
+    scopes=["https://www.googleapis.com/auth/calendar.events"],
+)
+calendar = create_calendar_service(credentials=grant)
+event = calendar.get(event_id)
+# A refresh updates grant in place: save grant.token and grant.expiry if changed.
+```
+
+Pass exactly one of `token_file` and `credentials`; both or neither raises
+`ValueError`. With `credentials`, the service never reads or writes a file, and
+`CALENDAR_TOKEN_FILE`, `K_SERVICE`, and `CALENDAR_MODE` do not change the
+account it uses. Services built from different grants stay separate, including
+in concurrent calls. A missing `calendar.events` scope, a revoked refresh token,
+or a failed refresh raises the same `CalendarError` codes as the token-file path,
+and the message tells the user to authorize again.
+
+## Upcoming events
+
+`create_calendar_service` returns an `UpcomingCalendarService`: the four shared
+methods plus `list_upcoming(start, end)`. This read is a Team 5 extension and is
+not part of `calendar-contract`.
+
+```python
+from datetime import UTC, datetime, timedelta
+
+now = datetime.now(UTC)
+for event in calendar.list_upcoming(now, now + timedelta(days=14)):
+    print(event.id, event.title, event.start, event.end)
+```
+
+It returns the timed events in the primary calendar that overlap the window,
+earliest first, as shared `Event` objects. Recurring events appear as their
+single instances; all-day and cancelled events are skipped. `start` and `end`
+must be timezone-aware, with `start` first, or it raises `INVALID_INPUT` before
+calling Google. Provider failures use the same codes as `get`.
 
 See the [consumer and verification guide](../../docs/CALENDAR_PACKAGE.md) for
 all four operations, error handling, local wheel testing, and release status.
