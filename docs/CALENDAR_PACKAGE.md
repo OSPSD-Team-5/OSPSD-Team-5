@@ -65,7 +65,9 @@ Testing-mode grants can expire and require reauthorization. Provider methods
 never open a browser or silently select Team 5's account.
 
 Supply the token path explicitly when constructing the service. In deployment,
-mount that file from the consumer's protected secret configuration. Do not place
+mount that file from the consumer's protected secret configuration. A service
+that acts for several users passes each user's `Credentials` with
+`credentials=` instead; see the package README. Do not place
 credentials in package source, wheels, images, logs, PRs, or verification output.
 Runtime token refresh remains in memory, so installed directories can be
 read-only. Missing, expired, revoked, or insufficient authorization produces a
@@ -121,7 +123,8 @@ Inputs use `title`, `start`, and `end`; `Event` adds `id`. Times are RFC 3339
 strings with explicit offsets and end after start. Compare timestamps by instant,
 since Google may normalize offsets; whole seconds are the portable choice.
 Listing, all-day events, attendees, and provider URLs are not promised by the
-shared core.
+shared core. This package adds `list_upcoming` outside the shared core; see the
+package README.
 
 ## Errors, retries, and cleanup
 

@@ -41,7 +41,7 @@ from .event_update_provider import (
     EventUpdateUnsupportedError,
 )
 
-Operation = Literal["create", "get", "replace", "delete"]
+Operation = Literal["create", "get", "replace", "delete", "list"]
 
 
 class GoogleCalendarService:
@@ -123,6 +123,7 @@ class GoogleCalendarService:
                 "create": "Google Calendar denied permission to create this event.",
                 "replace": "Google Calendar denied permission to update this event.",
                 "delete": "Google Calendar denied access to this event.",
+                "list": "Calendar denied access to these events.",
             }
             raise self._error(ErrorCode.ACCESS_DENIED, messages[operation]) from None
         except (
